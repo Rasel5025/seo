@@ -1,50 +1,128 @@
-import { KeywordResult, ContentAnalysis, SmartSEOAnalysis } from '../types';
+import { KeywordResult, SmartSEOAnalysis, ContentAnalysis } from '../types';
+import { GoogleGenAI, Type } from '@google/genai';
 
-const API_BASE_URL = 'http://localhost:3001/api/ai';
+// Initialize Gemini AI Client
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: apiKey });
+
+const MODEL_FAST = 'gemini-2.0-flash-001';
+const MODEL_SMART = 'gemini-2.5-pro';
 
 /**
- * Generates keyword ideas via backend API
+ * Generates keyword ideas via Client-side Gemini API
  */
 export const generateKeywords = async (seed: string, country: string): Promise<KeywordResult[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/keyword-research`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ seed, country })
+    if (!apiKey) throw new Error("API Key missing. Check .env file.");
+
+    const responseSchema = {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          keyword: { type: Type.STRING },
+          volume: { type: Type.STRING, description: "Estimated monthly search volume (e.g., '1k-10k')" },
+          difficulty: { type: Type.INTEGER, description: "SEO Difficulty 0-100. Be realistic." },
+          intent: { type: Type.STRING, enum: ['Informational', 'Commercial', 'Transactional', 'Navigational'] },
+          competition: { type: Type.STRING, enum: ['Low', 'Medium', 'High'] }
+        },
+        required: ['keyword', 'volume', 'difficulty', 'intent', 'competition']
+      }
+    };
+
+    const response = await ai.models.generateContent({
+      model: MODEL_FAST,
+      contents: `You are a Senior SEO Strategist.
+      Analyze the seed keyword: "${seed}" for the market: ${country}.
+      Generate 12-15 high-ROI keyword opportunities.
+      Output strict JSON.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: responseSchema,
+      }
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to generate keywords');
-    }
+    const text = response.text;
+    if (!text) throw new Error("No response from AI");
+    return JSON.parse(text);
 
-    return await response.json();
   } catch (error) {
     console.error("Keyword Gen Error:", error);
-    throw new Error("Failed to generate keywords. Please try again.");
+    throw new Error("Failed to generate keywords. " + (error as Error).message);
   }
 };
 
 /**
- * Smart Content SEO: Deep analysis and rewriting via backend API.
+ * Smart Content SEO: Deep analysis via Client-side Gemini API
  */
 export const optimizeSmartContent = async (
   inputData: { text?: string; base64?: string; mimeType?: string },
   context: { type: string; audience: string; goal: string }
 ): Promise<SmartSEOAnalysis> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/content-analysis`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...inputData, ...context })
-    });
+    if (!apiKey) throw new Error("API Key missing. Check .env file.");
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to optimize content');
+    const responseSchema = {
+      type: Type.OBJECT,
+      properties: {
+        seoScore: { type: Type.INTEGER, description: "Score 0-100 based on original content" },
+        optimizedContent: { type: Type.STRING, description: "The full rewritten content, formatted in Markdown." },
+        meta: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            description: { type: Type.STRING },
+            slug: { type: Type.STRING }
+          },
+          required: ['title', 'description', 'slug']
+        },
+        schemaMarkup: { type: Type.STRING, description: "JSON-LD script for the content type." },
+        internalLinks: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              anchor: { type: Type.STRING },
+              context: { type: Type.STRING, description: "Where to insert this link and why" }
+            },
+            required: ['anchor', 'context']
+          }
+        },
+        insights: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Why these changes were made." },
+        criticalIssues: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Major SEO errors found in original." }
+      },
+      required: ['seoScore', 'optimizedContent', 'meta', 'schemaMarkup', 'internalLinks', 'insights', 'criticalIssues']
+    };
+
+    const systemPrompt = `Analyze content: Type=${context.type}, Audience=${context.audience}, Goal=${context.goal}. 
+    Optimize for SEO and readability. Return strict JSON.`;
+
+    const parts = [{ text: systemPrompt }];
+
+    if (inputData.base64 && inputData.mimeType) {
+      parts.push({
+        inlineData: {
+          data: inputData.base64,
+          mimeType: inputData.mimeType
+        }
+      });
+    } else if (inputData.text) {
+      parts.push({ text: `Original Content:\n${inputData.text}` });
     }
 
-    return await response.json();
+    const response = await ai.models.generateContent({
+      model: MODEL_SMART,
+      contents: { parts },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: responseSchema,
+      }
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("No response from AI");
+    return JSON.parse(text);
+
   } catch (error) {
     console.error("Smart SEO Error:", error);
     throw new Error("Failed to optimize content. " + (error as Error).message);
@@ -52,79 +130,51 @@ export const optimizeSmartContent = async (
 };
 
 /**
- * Analyzes content for basic SEO optimization via backend API (Legacy fast analyzer).
- * Mapped to the same content-analysis endpoint but with simplified parameters if needed, 
- * or we can create a specific endpoint. For now, we'll assume the backend handles it 
- * or we use the Smart Content endpoint as it's superior.
- * 
- * TODO: Ideally update backend to support this specific legacy format or reuse smart content.
- * For now, let's map it to the smart endpoint or a simplified version?
- * The backend I created has `api/ai/content-analysis`.
- * Let's use that.
+ * Generate Strategy via Client-side Gemini API
  */
-export const analyzeContent = async (content: string, targetKeyword: string): Promise<ContentAnalysis> => {
+export const generateStrategy = async (domain: string, businessType: string, goals: string): Promise<string> => {
   try {
-    // We'll use the smart analysis endpoint but map the result to ContentAnalysis format
-    // OR we can add a specific endpoint for this.
-    // The backend I wrote only covers the "smart" analysis fully.
-    // Let's call the smart analysis endpoint and adapt the result, or just mock the "legacy" parts
-    // actually, let's just make sure the backend supports this.
-    // Wait, the backend has `api/ai/content-analysis` which expects specific schema.
+    if (!apiKey) throw new Error("API Key missing. Check .env file.");
 
-    // To keep it simple and working:
-    // I shall update the backend to support a "simple" mode or just use the heavy one.
-    // Actually, I can just reimplement access to the heavy one.
-
-    const response = await fetch(`${API_BASE_URL}/content-analysis`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: content,
-        type: 'general',
-        audience: 'general',
-        goal: `Optimize for keyword: ${targetKeyword}`
-      })
+    const response = await ai.models.generateContent({
+      model: MODEL_SMART,
+      contents: `Create a 3-month SEO strategy for ${domain} (${businessType}). Goal: ${goals}.
+      Output strictly raw HTML with Tailwind CSS classes.`,
     });
 
-    if (!response.ok) throw new Error('Analysis failed');
-
-    const data = await response.json() as SmartSEOAnalysis;
-
-    // Map SmartSEOAnalysis to ContentAnalysis
-    return {
-      score: data.seoScore,
-      readability: "Grade 8", // Default for now
-      wordCount: content.split(/\s+/).length,
-      suggestions: data.criticalIssues,
-      missingKeywords: [],
-      headingStructure: 'Good'
-    };
+    return response.text || "<p>Could not generate strategy.</p>";
   } catch (error) {
-    console.error("Analysis Error:", error);
-    throw new Error("Failed to analyze content.");
+    console.error("Strategy Gen Error:", error);
+    throw new Error("Failed to generate strategy.");
   }
 };
 
 /**
- * Generates an SEO Strategy Plan via backend API.
+ * Analyzes content for basic SEO optimization via Client-side Gemini API.
+ * Maps to optimizSmartContent for now to keep compatibility.
  */
-export const generateStrategy = async (domain: string, businessType: string, goals: string): Promise<string> => {
+export const analyzeContent = async (content: string, targetKeyword: string): Promise<ContentAnalysis> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/strategy`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ domain, businessType, goals })
-    });
+    const context = {
+      type: 'General Content',
+      audience: 'General Audience',
+      goal: `Optimize for keyword: ${targetKeyword}`
+    };
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to generate strategy');
-    }
+    const smartResult = await optimizeSmartContent({ text: content }, context);
 
-    const data = await response.json();
-    return data.strategy;
+    // Map SmartSEOAnalysis to ContentAnalysis structure
+    return {
+      score: smartResult.seoScore,
+      readability: "Auto-Calculated",
+      wordCount: content.split(/\s+/).length,
+      suggestions: smartResult.criticalIssues.map(issue => `Fix: ${issue}`),
+      missingKeywords: [],
+      headingStructure: 'Good'
+    };
+
   } catch (error) {
-    console.error("Strategy Gen Error:", error);
-    throw new Error("Failed to generate strategy.");
+    console.error("Analysis Error:", error);
+    throw new Error("Failed to analyze content.");
   }
 };
