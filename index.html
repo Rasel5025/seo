@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Banana SEO - AI Powered Optimization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              zinc: {
+                850: '#1f1f22',
+                900: '#18181b',
+                950: '#09090b',
+              },
+              banana: {
+                50: '#fffbeb',
+                100: '#fef3c7',
+                200: '#fde68a', 
+                300: '#fcd34d', 
+                400: '#fbbf24', // Standard
+                500: '#f59e0b', // Primary Brand (Warm Amber/Gold) - No green tint
+                600: '#d97706',
+                700: '#b45309',
+                800: '#92400e',
+                900: '#78350f',
+                950: '#451a03',
+              }
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+              'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(15px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #050505; /* Deep Black */
+        color: #e4e4e7; /* Zinc 200 */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* Premium Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #27272a; 
+        border-radius: 10px;
+        transition: background 0.2s;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #f59e0b; 
+      }
+      
+      /* Utilities - Premium Glass */
+      .glass-panel {
+        background: rgba(24, 24, 27, 0.4);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      }
+      
+      /* Input Premium - Refined */
+      .input-premium {
+        background-color: rgba(9, 9, 11, 0.6);
+        border: 1px solid rgba(63, 63, 70, 0.4);
+        color: white;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .input-premium:focus {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3), 0 4px 20px rgba(245, 158, 11, 0.05);
+        outline: none;
+        background-color: rgba(9, 9, 11, 0.9);
+      }
+      .input-premium::placeholder {
+        color: #52525b;
+      }
+      
+      /* Button Primary - Premium Gradient/Solid */
+      .btn-primary {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white; /* Changed to white for better contrast on amber */
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+      .btn-primary:hover {
+        box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
+        transform: translateY(-1px);
+        filter: brightness(1.1);
+      }
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* Typography selection */
+      ::selection {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+      }
+    </style>
+
+  <script type="importmap">
+{
+  "imports": {
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "mammoth": "https://esm.sh/mammoth@1.6.0"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-Dl4i-K7M.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CUF49f9u.css">
+</head>
+  <body>
+    <div id="root"></div>
+</body>
+</html>
