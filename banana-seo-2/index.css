@@ -1,0 +1,38 @@
+/* Global Styles - Banana SEO */
+/* Most styles are in index.html's <style> block and Tailwind CDN */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Additional global utilities if needed */
+body {
+  overflow-x: hidden;
+}
+
+/* Ensure recharts responsive containers work properly */
+.recharts-responsive-container {
+  min-height: 300px !important;
+  min-width: 300px !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+}
+
+/* Fix potential chart rendering issues */
+.recharts-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 300px !important;
+  position: relative !important;
+}
+
+/* Force SVG to render with proper dimensions */
+.recharts-surface {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 280px !important;
+  min-width: 280px !important;
+}
